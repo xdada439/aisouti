@@ -36,6 +36,24 @@
                 android:text="查看 →" android:textColor="@color/text_tertiary" android:textSize="12sp"/>
         </LinearLayout>
 
+        <!-- Open Source Licenses -->
+        <LinearLayout android:id="@+id/layoutOssLicense" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="1dp"
+            android:background="@drawable/bg_card_white" android:elevation="2dp"
+            android:orientation="horizontal" android:paddingHorizontal="14dp" android:paddingVertical="11dp" android:gravity="center_vertical">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:orientation="vertical">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="开源许可" android:textColor="@color/text_primary" android:textSize="14sp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="本应用及所用第三方开源组件的许可证"
+                    android:textColor="@color/text_tertiary" android:textSize="11sp"/>
+            </LinearLayout>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="查看 →" android:textColor="@color/text_tertiary" android:textSize="12sp"/>
+        </LinearLayout>
+
         <!-- Version -->
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="8dp" android:background="@drawable/bg_card_white"

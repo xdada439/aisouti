@@ -6,8 +6,7 @@ appcompat = "1.7.0"
 material = "1.12.0"
 lifecycleService = "2.7.0"
 coroutines = "1.7.3"
-retrofit = "2.9.0"
-okhttpLogging = "4.12.0"
+okhttp = "4.12.0"
 mlkitChinese = "16.0.0"
 hiddenApiBypass = "4.3"
 
@@ -23,9 +22,9 @@ google-material = { group = "com.google.android.material", name = "material", ve
 androidx-lifecycle-service = { group = "androidx.lifecycle", name = "lifecycle-service", version.ref = "lifecycleService" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 
-retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
-retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
-okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttpLogging" }
+# ApiRepository 直接用 OkHttp + org.json 手写请求，不经 Retrofit/Gson。
+# Retrofit、converter-gson、logging-interceptor 随激活体系（1.1.43）一并废弃，已移除。
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 
 mlkit-text-recognition-chinese = { group = "com.google.mlkit", name = "text-recognition-chinese", version.ref = "mlkitChinese" }
 

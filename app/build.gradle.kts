@@ -17,8 +17,8 @@ android {
         applicationId = "com.aisouti"
         minSdk = 21
         targetSdk = 34
-        versionCode = 53
-        versionName = "1.1.51"
+        versionCode = 54
+        versionName = "1.1.52"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -77,9 +77,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.service)
     implementation(libs.kotlinx.coroutines.android)
 
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.gson)
-    implementation(libs.okhttp.logging.interceptor)
+    implementation(libs.okhttp)
 
     implementation(libs.mlkit.text.recognition.chinese)
     implementation(libs.hidden.api.bypass)

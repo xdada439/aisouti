@@ -27,6 +27,7 @@ class UserCenterActivity : AppCompatActivity() {
         // 1.1.43：已移除激活/授权体系，App 安装即全功能，用户中心不再展示授权信息。
 
         findViewById<android.view.View>(R.id.layoutLegal).setOnClickListener { showLegalDialog() }
+        findViewById<android.view.View>(R.id.layoutOssLicense).setOnClickListener { showOssLicenseDialog() }
 
         // Version info
         try {
@@ -44,6 +45,79 @@ class UserCenterActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         scope.cancel()
+    }
+
+    /**
+     * 开源许可页面。
+     *
+     * Apache-2.0 要求**分发二进制时**随附许可证文本与署名——仓库里有 LICENSE 不算数，
+     * 因为拿到 APK 的人接触不到仓库。所以这一页在应用内是合规必需的，不是装饰。
+     */
+    private fun showOssLicenseDialog() {
+        val text = """
+            ━━━━━━━━━━ 本应用 ━━━━━━━━━━
+
+            AI 搜题（aisouti）
+            Copyright 2026 xdada439
+            采用 Apache License 2.0 授权。
+
+            源码：https://github.com/xdada439/aisouti
+            许可证全文：http://www.apache.org/licenses/LICENSE-2.0
+
+
+            ━━━━━━━━━━ 第三方组件 ━━━━━━━━━━
+
+            以下组件按各自许可证条款使用，版权归各自作者所有。
+
+            · AndroidX（core-ktx / appcompat / lifecycle-service）
+              Copyright The Android Open Source Project
+              Apache License 2.0
+
+            · Material Components for Android
+              Copyright Google LLC
+              Apache License 2.0
+
+            · Kotlin Coroutines
+              Copyright JetBrains s.r.o.
+              Apache License 2.0
+
+            · OkHttp
+              Copyright Square, Inc.
+              Apache License 2.0
+
+            · HiddenApiBypass
+              Copyright LSPosed
+              Apache License 2.0
+
+            · Google ML Kit（中文文字识别）
+              Copyright Google LLC
+              适用 Google APIs 服务条款与 ML Kit 条款
+              https://developers.google.com/ml-kit/terms
+
+
+            ━━━━━━━━━━ Apache License 2.0 要点 ━━━━━━━━━━
+
+            允许自由使用、修改、再分发，包括商业用途。
+            要求保留版权声明与许可证副本，并注明所做的修改。
+            软件按"现状"提供，不附带任何明示或暗示的担保；
+            在法律允许的范围内，作者不对使用本软件产生的
+            任何损害承担责任。
+        """.trimIndent()
+
+        val scroll = android.widget.ScrollView(this)
+        val tv = TextView(this).apply {
+            this.text = text
+            textSize = 12f
+            setTextIsSelectable(true)
+            val pad = (resources.displayMetrics.density * 20).toInt()
+            setPadding(pad, pad, pad, pad)
+        }
+        scroll.addView(tv)
+        AlertDialog.Builder(this)
+            .setTitle("开源许可")
+            .setView(scroll)
+            .setPositiveButton("关闭", null)
+            .show()
     }
 
     private fun showQuestionBankDiagnosis() {
