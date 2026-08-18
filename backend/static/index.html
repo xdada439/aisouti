@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI搜题助手 - 后台管理</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>AI搜题助手</h1>
+    <span class="subtitle">后台管理</span>
+    <nav>
+      <button class="tab active" data-tab="question-bank">精准题库</button>
+      <button class="tab" data-tab="knowledge-base">模糊匹配资料</button>
+      <button class="tab" data-tab="ai-settings">AI设置</button>
+      <button class="tab" data-tab="users">AI搜题用户中心</button>
+      <button class="tab" data-tab="settings">系统设置</button>
+    </nav>
+  </header>
+
+  <section id="tab-question-bank" class="tab-content active">
+    <div class="card">
+      <h2>导入精准题库</h2>
+      <p class="hint">上传 Excel 题库文件（.xlsx），兼容考试宝模板。命中后直接返回答案，不调用API。</p>
+      <div class="upload-area">
+        <input type="file" id="qb-file" accept=".xlsx,.xls">
+        <button id="qb-import-btn" class="btn primary">导入题库</button>
+      </div>
+      <div id="qb-import-status"></div>
+    </div>
+    <div class="card">
+      <h2>题库统计</h2>
+      <button id="qb-refresh-btn" class="btn">刷新统计</button>
+      <button id="qb-clear-btn" class="btn danger">清空题库</button>
+      <div id="qb-stats"></div>
+    </div>
+  </section>
+
+  <section id="tab-knowledge-base" class="tab-content">
+    <div class="card">
+      <h2>上传模糊匹配资料</h2>
+      <p class="hint">支持 PDF、Word、PPT、TXT、Markdown、Excel 文件。精准题库未命中时检索top20片段交由API判断。</p>
+      <div class="form-row">
+        <input type="text" id="kb-name" placeholder="资料名称">
+        <input type="text" id="kb-subject" placeholder="科目（如：安全生产）">
+        <input type="text" id="kb-tags" placeholder="标签（逗号分隔）">
+      </div>
+      <div class="upload-area">
+        <input type="file" id="kb-file" accept=".pdf,.docx,.pptx,.txt,.md,.xlsx">
+        <button id="kb-upload-btn" class="btn primary">上传并索引</button>
+      </div>
+      <div id="kb-upload-status"></div>
+    </div>
+    <div class="card">
+      <h2>资料列表</h2>
+      <button id="kb-refresh-btn" class="btn">刷新列表</button>
+      <div id="kb-list"></div>
+    </div>
+  </section>
+
+  <section id="tab-ai-settings" class="tab-content">
+    <div class="card ai-panel">
+      <h2>AI设置</h2>
+      <p class="hint">三套模型互相独立：图文识别、模糊匹配解析、兜底模式。</p>
+      <div class="settings-grid">
+        <div class="setting-box">
+          <h3>1. AI图文识别</h3>
+          <p class="hint">用于手机端截图识题。建议填写视觉模型。</p>
+          <label>API Endpoint<input type="text" id="vision-endpoint" placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"></label>
+          <label>API Key<input type="password" id="vision-key" placeholder="sk-..."></label>
+          <label>Model Name<input type="text" id="vision-model" placeholder="qwen-vl-plus"></label>
+        </div>
+        <div class="setting-box">
+          <h3>2. 模糊匹配解析</h3>
+          <p class="hint">用于模糊匹配检索命中后的答案解析。</p>
+          <label>API Endpoint<input type="text" id="index-endpoint" placeholder="https://api.deepseek.com/chat/completions"></label>
+          <label>API Key<input type="password" id="index-key" placeholder="sk-..."></label>
+          <label>Model Name<input type="text" id="index-model" placeholder="deepseek-chat"></label>
+        </div>
+        <div class="setting-box">
+          <h3>3. 兜底模式</h3>
+          <p class="hint">精准题库和模糊匹配都没有命中时，使用模型自身知识判断。兜底模式答案可能不准确，仅作为参考。</p>
+          <label>API Endpoint<input type="text" id="fallback-endpoint" placeholder="https://api.deepseek.com/chat/completions"></label>
+          <label>API Key<input type="password" id="fallback-key" placeholder="sk-..."></label>
+          <label>Model Name<input type="text" id="fallback-model" placeholder="deepseek-chat"></label>
+        </div>
+      </div>
+      <button id="ai-settings-save-btn" class="btn primary">保存AI设置</button>
+      <div id="ai-settings-status"></div>
+    </div>
+  </section>
+
+  <section id="tab-users" class="tab-content">
+    <div class="card">
+      <h2>AI搜题用户中心</h2>
+      <p class="hint">用户手机号注册后会显示在这里，可开通 20 次免费测试、100 次、500 次权限。</p>
+      <div class="form-row user-create-row">
+        <input type="text" id="user-phone" placeholder="手机号">
+        <button id="user-create-btn" class="btn primary">新增/查询用户</button>
+        <button id="users-refresh-btn" class="btn">刷新用户</button>
+      </div>
+      <div id="users-status"></div>
+      <div id="users-list"></div>
+    </div>
+  </section>
+
+  <section id="tab-settings" class="tab-content">
+    <div class="card">
+      <h2>系统设置</h2>
+      <table class="settings-table">
+        <tr><th>FastAPI 服务地址</th><td id="service-url">/ai-souti/</td></tr>
+        <tr><th>AppKey</th><td>ai_search</td></tr>
+        <tr><th>当前版本</th><td>2.0.0</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h2>搜题流程</h2>
+      <p class="hint">整屏截图 → 视觉API识别题目 → 精准题库匹配 → 模糊匹配 → 兜底模式 → 显示答案</p>
+    </div>
+  </section>
+</div>
+<script src="/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+# ── 构建产物 ──
+build/
+app/build/
+.gradle/
+.kotlin/
+app/.cxx/
+*.apk
+*.aab
+
+# ── 敏感文件：签名密钥与本机路径，绝对不能进版本库 ──
+keystore.properties
+*.keystore
+*.jks
+local.properties
+
+# ── IDE ──
+.idea/
+*.iml
+.DS_Store
+
+# ── Python 后端 ──
+__pycache__/
+*.pyc
+.venv/
+backend/data/chroma/
+backend/data/uploads/
+
+# ── 本地调试产物 ──
+*.db-journal

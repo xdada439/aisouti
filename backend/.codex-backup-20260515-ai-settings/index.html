@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI搜题助手 - 后台管理</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>AI搜题助手</h1>
+    <span class="subtitle">后台管理</span>
+    <nav>
+      <button class="tab active" data-tab="question-bank">题库管理</button>
+      <button class="tab" data-tab="knowledge-base">知识库管理</button>
+      <button class="tab" data-tab="settings">系统设置</button>
+    </nav>
+  </header>
+
+  <!-- 题库管理 -->
+  <section id="tab-question-bank" class="tab-content active">
+    <div class="card">
+      <h2>导入题库</h2>
+      <p class="hint">上传 Excel 题库文件（.xlsx），表头自动对齐24列模板</p>
+      <div class="upload-area">
+        <input type="file" id="qb-file" accept=".xlsx,.xls">
+        <button id="qb-import-btn" class="btn primary">导入题库</button>
+      </div>
+      <div id="qb-import-status"></div>
+    </div>
+    <div class="card">
+      <h2>题库统计</h2>
+      <button id="qb-refresh-btn" class="btn">刷新统计</button>
+      <button id="qb-clear-btn" class="btn danger">清空题库</button>
+      <div id="qb-stats"></div>
+    </div>
+  </section>
+
+  <!-- 知识库管理 -->
+  <section id="tab-knowledge-base" class="tab-content">
+    <div class="card">
+      <h2>上传教材</h2>
+      <p class="hint">支持 PDF、Word、PPT、TXT、Markdown 文件</p>
+      <div class="form-row">
+        <input type="text" id="kb-name" placeholder="知识库名称">
+        <input type="text" id="kb-subject" placeholder="科目（如：安全生产）">
+        <input type="text" id="kb-tags" placeholder="标签（逗号分隔）">
+      </div>
+      <div class="upload-area">
+        <input type="file" id="kb-file" accept=".pdf,.docx,.pptx,.txt,.md">
+        <button id="kb-upload-btn" class="btn primary">上传并索引</button>
+      </div>
+      <div id="kb-upload-status"></div>
+    </div>
+    <div class="card">
+      <h2>知识库列表</h2>
+      <button id="kb-refresh-btn" class="btn">刷新列表</button>
+      <div id="kb-list"></div>
+    </div>
+  </section>
+
+  <!-- 系统设置 -->
+  <section id="tab-settings" class="tab-content">
+    <div class="card">
+      <h2>RAG AI 配置</h2>
+      <p class="hint">教材知识库答题使用的AI模型配置（与客户端AI视觉模型独立）</p>
+      <div class="form-row">
+        <label>API Endpoint <input type="text" id="rag-endpoint" placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"></label>
+      </div>
+      <div class="form-row">
+        <label>API Key <input type="password" id="rag-key" placeholder="sk-..."></label>
+      </div>
+      <div class="form-row">
+        <label>Model Name <input type="text" id="rag-model" placeholder="qwen-plus"></label>
+      </div>
+      <button id="settings-save-btn" class="btn primary">保存配置</button>
+      <div id="settings-status"></div>
+    </div>
+  </section>
+</div>
+<script src="/admin.js"></script>
+</body>
+</html>

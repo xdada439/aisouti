@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/brand_surface" android:orientation="vertical" android:fitsSystemWindows="true">
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="46dp"
+        android:gravity="center_vertical" android:orientation="horizontal"
+        android:paddingStart="6dp" android:paddingEnd="12dp">
+        <TextView android:id="@+id/tvBack" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:padding="8dp" android:text="← 返回" android:textColor="@color/brand_primary" android:textSize="15sp"/>
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:gravity="center" android:text="用户中心" android:textColor="@color/text_primary"
+            android:textSize="16sp" android:textStyle="bold"/>
+        <View android:layout_width="44dp" android:layout_height="1dp"/>
+    </LinearLayout>
+
+    <ScrollView android:layout_width="match_parent" android:layout_height="match_parent"
+        android:paddingHorizontal="14dp" android:paddingTop="8dp" android:paddingBottom="8dp">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+
+        <!-- Legal -->
+        <LinearLayout android:id="@+id/layoutLegal" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="8dp"
+            android:background="@drawable/bg_card_white" android:elevation="2dp"
+            android:orientation="horizontal" android:paddingHorizontal="14dp" android:paddingVertical="11dp" android:gravity="center_vertical">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:orientation="vertical">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="用户协议 &amp; 隐私政策" android:textColor="@color/text_primary" android:textSize="14sp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="授权使用条款与数据保护说明"
+                    android:textColor="@color/text_tertiary" android:textSize="11sp"/>
+            </LinearLayout>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="查看 →" android:textColor="@color/text_tertiary" android:textSize="12sp"/>
+        </LinearLayout>
+
+        <!-- Version -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:background="@drawable/bg_card_white"
+            android:elevation="2dp" android:orientation="vertical" android:paddingHorizontal="14dp" android:paddingVertical="10dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="版本信息" android:textColor="@color/text_primary"
+                android:textSize="14sp" android:textStyle="bold"/>
+            <TextView android:id="@+id/tvVersionCode" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:layout_marginTop="2dp"
+                android:text="版本 1.0" android:textColor="@color/text_tertiary" android:textSize="12sp"/>
+        </LinearLayout>
+
+        <!-- Recognition Log -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:background="@drawable/bg_card_white"
+            android:elevation="2dp" android:orientation="horizontal"
+            android:paddingHorizontal="14dp" android:paddingVertical="10dp" android:gravity="center_vertical">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:orientation="vertical">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="识别日志" android:textColor="@color/text_primary"
+                    android:textSize="14sp" android:textStyle="bold"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="保留近 3 次启动的搜题记录"
+                    android:textColor="@color/text_tertiary" android:textSize="12sp"/>
+            </LinearLayout>
+            <Button android:id="@+id/btnViewRecognitionLog" android:layout_width="wrap_content"
+                android:layout_height="36dp" android:text="查看" android:textSize="11sp"
+                android:paddingStart="14dp" android:paddingEnd="14dp"
+                android:textColor="@color/brand_primary" android:background="@drawable/bg_btn_outline"
+                android:stateListAnimator="@null"/>
+        </LinearLayout>
+
+        <!-- Question Bank Diagnosis -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="1dp" android:background="@drawable/bg_card_white"
+            android:elevation="2dp" android:orientation="horizontal"
+            android:paddingHorizontal="14dp" android:paddingVertical="10dp" android:gravity="center_vertical">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:orientation="vertical">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="题库诊断" android:textColor="@color/text_primary"
+                    android:textSize="14sp" android:textStyle="bold"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="按题型统计 + 导入失败明细"
+                    android:textColor="@color/text_tertiary" android:textSize="12sp"/>
+            </LinearLayout>
+            <Button android:id="@+id/btnQuestionBankDiagnosis" android:layout_width="wrap_content"
+                android:layout_height="36dp" android:text="查看" android:textSize="11sp"
+                android:paddingStart="14dp" android:paddingEnd="14dp"
+                android:textColor="@color/brand_primary" android:background="@drawable/bg_btn_outline"
+                android:stateListAnimator="@null"/>
+        </LinearLayout>
+
+        <View android:layout_width="match_parent" android:layout_height="12dp"/>
+    </LinearLayout>
+    </ScrollView>
+</LinearLayout>

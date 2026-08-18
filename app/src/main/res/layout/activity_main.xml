@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/brand_surface" android:fitsSystemWindows="true">
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:orientation="vertical" android:paddingHorizontal="18dp" android:paddingTop="10dp" android:paddingBottom="10dp">
+
+    <TextView android:id="@+id/tvTitle" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:layout_marginTop="4dp" android:gravity="center"
+        android:text="@string/app_name" android:textColor="@color/text_primary"
+        android:textSize="22sp" android:textStyle="bold" android:letterSpacing="0.04"/>
+
+    <!-- Settings Card -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="12dp" android:background="@drawable/bg_card_glow"
+        android:orientation="vertical" android:padding="2dp" android:elevation="3dp">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:paddingHorizontal="14dp" android:paddingTop="12dp" android:paddingBottom="12dp">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="基础设置" android:textColor="@color/text_tertiary"
+            android:textSize="11sp" android:letterSpacing="0.08"/>
+        <!-- Accessibility -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="10dp" android:gravity="center_vertical" android:orientation="horizontal">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="无障碍服务" android:textColor="@color/text_primary" android:textSize="14sp"/>
+            <TextView android:id="@+id/tvAccessibilityStatus" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:layout_marginEnd="8dp"
+                android:text="未开启" android:textColor="@color/status_warn" android:textSize="12sp"/>
+            <Button android:id="@+id/btnOpenAccessibilityService" android:layout_width="wrap_content"
+                android:layout_height="36dp" android:minWidth="56dp" android:paddingStart="12dp" android:paddingEnd="12dp"
+                android:text="去开启" android:textSize="11sp" android:textColor="@color/white"
+                android:background="@drawable/bg_btn_gradient" android:stateListAnimator="@null"/>
+        </LinearLayout>
+        <View android:layout_width="match_parent" android:layout_height="1dp"
+            android:layout_marginTop="8dp" android:background="@color/divider"/>
+        <!-- Overlay -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:gravity="center_vertical" android:orientation="horizontal">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="悬浮窗权限" android:textColor="@color/text_primary" android:textSize="14sp"/>
+            <TextView android:id="@+id/tvOverlayStatus" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:layout_marginEnd="8dp"
+                android:text="未开启" android:textColor="@color/status_warn" android:textSize="12sp"/>
+            <Button android:id="@+id/btnOpenOverlayPermission" android:layout_width="wrap_content"
+                android:layout_height="36dp" android:minWidth="56dp" android:paddingStart="12dp" android:paddingEnd="12dp"
+                android:text="去开启" android:textSize="11sp" android:textColor="@color/white"
+                android:background="@drawable/bg_btn_gradient" android:stateListAnimator="@null"/>
+        </LinearLayout>
+        <View android:layout_width="match_parent" android:layout_height="1dp"
+            android:layout_marginTop="8dp" android:background="@color/divider"/>
+        <!-- Battery Optimization -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:gravity="center_vertical" android:orientation="horizontal">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="电池优化" android:textColor="@color/text_primary" android:textSize="14sp"/>
+            <TextView android:id="@+id/tvBatteryStatus" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:layout_marginEnd="8dp"
+                android:text="受限" android:textColor="@color/status_warn" android:textSize="12sp"/>
+            <Button android:id="@+id/btnOpenBatteryOptimization" android:layout_width="wrap_content"
+                android:layout_height="36dp" android:minWidth="56dp" android:paddingStart="12dp" android:paddingEnd="12dp"
+                android:text="去忽略" android:textSize="11sp" android:textColor="@color/white"
+                android:background="@drawable/bg_btn_gradient" android:stateListAnimator="@null"/>
+        </LinearLayout>
+        <View android:layout_width="match_parent" android:layout_height="1dp"
+            android:layout_marginTop="8dp" android:background="@color/divider"/>
+        <!-- Anti-detection -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" android:gravity="center_vertical" android:orientation="horizontal">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="防检测（录屏/截屏隐藏）" android:textColor="@color/text_primary" android:textSize="14sp"/>
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swAntiDetection"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+        <View android:layout_width="match_parent" android:layout_height="1dp"
+            android:layout_marginTop="4dp" android:background="@color/divider"/>
+        <!-- API 配置入口（点击进入 AI 设置页） -->
+        <LinearLayout android:id="@+id/layoutApiConfig" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:gravity="center_vertical" android:orientation="horizontal"
+            android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="API 配置" android:textColor="@color/text_primary" android:textSize="14sp"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="设置 →" android:textColor="@color/text_tertiary" android:textSize="12sp"/>
+        </LinearLayout>
+        <View android:layout_width="match_parent" android:layout_height="1dp"
+            android:layout_marginTop="8dp" android:background="@color/divider"/>
+        <!-- 悬浮窗显示入口（点击进入显示设置页） -->
+        <LinearLayout android:id="@+id/layoutDisplaySettings" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:gravity="center_vertical" android:orientation="horizontal"
+            android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="悬浮窗显示" android:textColor="@color/text_primary" android:textSize="14sp"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="调整 →" android:textColor="@color/text_tertiary" android:textSize="12sp"/>
+        </LinearLayout>
+        <View android:layout_width="match_parent" android:layout_height="1dp"
+            android:layout_marginTop="8dp" android:background="@color/divider"/>
+        <!-- Data (并到一行) -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:gravity="center_vertical" android:orientation="horizontal">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="数据统计" android:textColor="@color/text_primary" android:textSize="14sp"/>
+            <TextView android:id="@+id/tvDataStatus" android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="题库 0  ·  资料 0" android:textColor="@color/text_tertiary" android:textSize="12sp"/>
+        </LinearLayout>
+    </LinearLayout>
+    </LinearLayout>
+
+    <!-- Floating Toggle -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="10dp" android:background="@drawable/bg_card_white"
+        android:elevation="2dp" android:gravity="center_vertical"
+        android:orientation="horizontal" android:paddingHorizontal="16dp" android:paddingVertical="10dp">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:text="悬浮球" android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold"/>
+        <Button android:id="@+id/btnToggleFloating" android:layout_width="wrap_content" android:layout_height="36dp"
+            android:minWidth="72dp" android:text="OFF" android:textSize="12sp"
+            android:paddingStart="14dp" android:paddingEnd="14dp"
+            android:textColor="@color/text_secondary" android:background="@drawable/bg_btn_outline"
+            android:stateListAnimator="@null"/>
+    </LinearLayout>
+
+    <!-- Mode Segment -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="44dp"
+        android:layout_marginTop="8dp" android:background="@drawable/bg_card_white"
+        android:elevation="2dp" android:padding="3dp" android:orientation="horizontal">
+        <Button android:id="@+id/btnModeNormal" android:layout_width="0dp" android:layout_height="match_parent"
+            android:layout_weight="1" android:text="普通模式" android:textSize="13sp" android:textStyle="bold"
+            android:textColor="@color/white" android:background="@drawable/bg_btn_gradient"
+            android:stateListAnimator="@null"/>
+        <Button android:id="@+id/btnModeMinimal" android:layout_width="0dp" android:layout_height="match_parent"
+            android:layout_weight="1" android:text="极简模式" android:textSize="13sp"
+            android:textColor="@color/text_secondary" android:background="@android:color/transparent"
+            android:stateListAnimator="@null"/>
+    </LinearLayout>
+
+    <!-- Menu -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" android:background="@drawable/bg_card_glow"
+        android:elevation="3dp" android:orientation="vertical" android:padding="2dp">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+        <Button android:id="@+id/btnImportData" android:layout_width="match_parent" android:layout_height="44dp"
+            android:gravity="start|center_vertical" android:paddingStart="16dp" android:paddingEnd="16dp"
+            android:text="导入资料" android:textSize="14sp" android:textColor="@color/text_primary"
+            android:background="@android:color/transparent" android:stateListAnimator="@null"/>
+        <View android:layout_width="match_parent" android:layout_height="1dp"
+            android:layout_marginHorizontal="16dp" android:background="@color/divider"/>
+        <Button android:id="@+id/btnUserCenter" android:layout_width="match_parent" android:layout_height="44dp"
+            android:gravity="start|center_vertical" android:paddingStart="16dp" android:paddingEnd="16dp"
+            android:text="用户中心" android:textSize="14sp" android:textColor="@color/text_primary"
+            android:background="@android:color/transparent" android:stateListAnimator="@null"/>
+    </LinearLayout>
+    </LinearLayout>
+
+    <TextView android:id="@+id/tvStatus" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:layout_marginTop="8dp" android:gravity="center"
+        android:textColor="@color/text_tertiary" android:textSize="11sp"/>
+
+    <Button android:id="@+id/btnExit" android:layout_width="match_parent" android:layout_height="38dp"
+        android:layout_marginTop="4dp" android:text="退出" android:textColor="@color/text_tertiary"
+        android:textSize="13sp" android:background="@android:color/transparent"
+        android:stateListAnimator="@null"/>
+</LinearLayout>
+</ScrollView>

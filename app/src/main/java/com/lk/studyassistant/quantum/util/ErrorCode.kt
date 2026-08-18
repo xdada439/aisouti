@@ -1,0 +1,33 @@
+package com.lk.studyassistant.quantum.util
+
+object ErrorCode {
+    // 权限
+    const val NO_ACCESSIBILITY_PERMISSION = "NO_ACCESSIBILITY_PERMISSION"
+    const val NO_OVERLAY_PERMISSION = "NO_OVERLAY_PERMISSION"
+    // 截图
+    const val SCREENSHOT_FAILED = "SCREENSHOT_FAILED"
+    const val SCREENSHOT_SUCCESS_BUT_OCR_EMPTY = "SCREENSHOT_SUCCESS_BUT_OCR_EMPTY"
+    // OCR
+    const val OCR_FAILED = "OCR_FAILED"
+    const val OCR_RESULT_EMPTY = "OCR_RESULT_EMPTY"
+    const val OCR_TEXT_TOO_SHORT = "OCR_TEXT_TOO_SHORT"
+    const val ACCESSIBILITY_TEXT_EMPTY = "ACCESSIBILITY_TEXT_EMPTY"
+    // API配置
+    const val API_CONFIG_MISSING = "API_CONFIG_MISSING"
+    const val API_KEY_MISSING = "API_KEY_MISSING"
+    // 视觉API
+    const val API_VISION_FAILED = "API_VISION_FAILED"
+    const val API_JSON_PARSE_FAILED = "API_JSON_PARSE_FAILED"
+    // 精准题库
+    const val QUESTION_BANK_EMPTY = "QUESTION_BANK_EMPTY"
+    const val QUESTION_BANK_NO_MATCH = "QUESTION_BANK_NO_MATCH"
+    // 模糊匹配
+    const val MATERIAL_EMPTY = "MATERIAL_EMPTY"
+    const val MATERIAL_NO_MATCH = "MATERIAL_NO_MATCH"
+    // 答案API
+    const val API_ANSWER_FAILED = "API_ANSWER_FAILED"
+    const val API_ANSWER_EMPTY = "API_ANSWER_EMPTY"
+    // 通用
+    const val FLOATING_BALL_OFF = "FLOATING_BALL_OFF"
+    const val UNKNOWN_ERROR = "UNKNOWN_ERROR"
+}
