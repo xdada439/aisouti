@@ -77,7 +77,8 @@ class MainActivity : AppCompatActivity() {
         btnExit = findViewById(R.id.btnExit)
         swAntiDetection = findViewById(R.id.swAntiDetection)
 
-        // 防检测开关：变更后立即生效（重启悬浮窗以应用新 LayoutParams.flags）
+        // 悬浮窗隐私保护开关：给悬浮窗加 FLAG_SECURE，使其不出现在录屏/截屏里。
+        // 变更后立即生效（重启悬浮窗以应用新 LayoutParams.flags）。
         swAntiDetection.isChecked = antiDetectionStore.enabled
         swAntiDetection.setOnCheckedChangeListener { _, checked ->
             antiDetectionStore.enabled = checked

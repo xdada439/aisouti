@@ -68,7 +68,7 @@
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="4dp" android:gravity="center_vertical" android:orientation="horizontal">
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:text="防检测（录屏/截屏隐藏）" android:textColor="@color/text_primary" android:textSize="14sp"/>
+                android:text="悬浮窗隐私保护（录屏/截屏时隐藏）" android:textColor="@color/text_primary" android:textSize="14sp"/>
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/swAntiDetection"
                 android:layout_width="wrap_content"
