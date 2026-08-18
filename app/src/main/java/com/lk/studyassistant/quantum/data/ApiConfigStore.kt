@@ -24,10 +24,10 @@ class ApiConfigStore(context: Context) {
          * 服务商预设。
          *
          * 只是"填空模板"，点一下把 Base URL 和模型名填进输入框，用户仍可任意改。
-         * **模型名会随服务商上下线而变动，最终以各家控制台为准**——预设填错了不会
+         * 模型名会随服务商上下线而变动，最终以各家控制台为准——预设填错了不会
          * 导致崩溃，只会在「测试连接」时报模型不存在，用户改一下模型名即可。
          *
-         * 收录标准：必须提供 **OpenAI 兼容的 /chat/completions 接口** 且有多模态模型，
+         * 收录标准：必须提供 OpenAI 兼容的 /chat/completions 接口，且有多模态模型，
          * 因为 [ApiRepository] 统一用 `messages[].content[] = {type:image_url}` 这一种格式发图。
          *
          * @param hint 该服务商特有的坑，点选时显示给用户
@@ -48,7 +48,7 @@ class ApiConfigStore(context: Context) {
             ProviderPreset("豆包",
                 "https://ark.cn-beijing.volces.com/api/v3",
                 "doubao-1.5-vision-pro-32k", "",
-                "火山方舟的模型名要填**接入点 ID（ep- 开头）或控制台给出的模型 ID**，" +
+                "火山方舟的模型名要填「接入点 ID（ep- 开头）」或控制台给出的模型 ID，" +
                     "预设值仅供参考，请到方舟控制台复制实际值。"),
             ProviderPreset("智谱GLM",
                 "https://open.bigmodel.cn/api/paas/v4",
@@ -70,6 +70,70 @@ class ApiConfigStore(context: Context) {
             // 官方 /chat/completions 调不到），填了也读不了图，故不列入预设。
             // 只想用文本能力的话，手动填 https://api.deepseek.com/v1 + deepseek-chat 到"文本模型"即可。
         )
+        /**
+         * 规范化用户填的 Base URL：补协议头 + 自动补 chat/completions 路径。
+         *
+         * 1.1.46 补的两条，都是真机上撞出来的：
+         *  · 没有协议头就补 https 前缀。用户从控制台复制专属 endpoint 时经常只有裸域名
+         *    （如 `llm-xxx.cn-beijing.maas.aliyuncs.com`），OkHttp 会直接抛
+         *    "Expected URL scheme 'http' or 'https'"，而错误信息完全看不出该怎么办。
+         *  · 只有域名没有路径时补 /v1/chat/completions。各家自建/专属 endpoint
+         *    基本都是 OpenAI 兼容的 /v1 前缀，这样用户粘贴域名就能直接用。
+         */
+        fun normalizeBaseUrl(raw: String): String {
+            var url = raw.trim().trimEnd('/')
+            if (url.isBlank()) return url
+
+            // ① 补协议头。注意要排除 "localhost:8000" 这种带端口的写法被误判成有 scheme。
+            if (!url.startsWith("http://", true) && !url.startsWith("https://", true)) {
+                url = "https://$url"
+            }
+            if (url.endsWith("/chat/completions", ignoreCase = true)) return url
+
+            // ② 只有 scheme://host（可带端口），没有任何路径 → 按 OpenAI 兼容惯例补全
+            val afterScheme = url.substringAfter("://")
+            if (!afterScheme.contains('/')) {
+                return "$url/v1/chat/completions"
+            }
+            return when {
+                // 阿里通义千问（DashScope 兼容模式）
+                url.contains("dashscope.aliyuncs.com") && !url.contains("v1") ->
+                    "$url/compatible-mode/v1/chat/completions"
+                url.contains("dashscope.aliyuncs.com") ->
+                    url.trimEnd('/') + "/chat/completions"
+                // 火山引擎·豆包
+                url.contains("volces.com") ->
+                    "$url/chat/completions"
+                // 智谱 GLM-4V
+                url.contains("bigmodel.cn") ->
+                    "$url/chat/completions"
+                // 百度千帆
+                url.contains("qianfan.baidubce.com") ->
+                    "$url/chat/completions"
+                // OpenAI 官方
+                url.contains("openai.com") ->
+                    "$url/chat/completions"
+                // DeepSeek（DeepSeek-VL2）
+                url.contains("deepseek.com") ->
+                    "$url/chat/completions"
+                // SiliconFlow（聚合视觉模型）
+                url.contains("siliconflow.cn") ->
+                    "$url/chat/completions"
+                // Moonshot Kimi
+                url.contains("moonshot.cn") || url.contains("moonshot.ai") ->
+                    "$url/chat/completions"
+                // 零一万物
+                url.contains("lingyiwanwu.com") ->
+                    "$url/chat/completions"
+                // 腾讯混元
+                url.contains("hunyuan.tencent.com") ->
+                    "$url/chat/completions"
+                // 通用：以 /v1、/v2、/v3 结尾 → 补全 /chat/completions
+                Regex("/v\\d+$").containsMatchIn(url) ->
+                    "$url/chat/completions"
+                else -> url
+            }
+        }
     }
 
     private val prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -136,49 +200,7 @@ class ApiConfigStore(context: Context) {
         return t.take(4) + "****" + t.takeLast(4)
     }
 
-    /** 自动识别并填充 chat/completions 路径（支持主流视觉模型服务商） */
-    fun normalizeBaseUrl(raw: String): String {
-        val url = raw.trim().trimEnd('/')
-        if (url.isBlank()) return url
-        if (url.endsWith("/chat/completions", ignoreCase = true)) return url
-        return when {
-            // 阿里通义千问（DashScope 兼容模式）
-            url.contains("dashscope.aliyuncs.com") && !url.contains("v1") ->
-                "$url/compatible-mode/v1/chat/completions"
-            url.contains("dashscope.aliyuncs.com") ->
-                url.trimEnd('/') + "/chat/completions"
-            // 火山引擎·豆包
-            url.contains("volces.com") ->
-                "$url/chat/completions"
-            // 智谱 GLM-4V
-            url.contains("bigmodel.cn") ->
-                "$url/chat/completions"
-            // 百度千帆
-            url.contains("qianfan.baidubce.com") ->
-                "$url/chat/completions"
-            // OpenAI 官方
-            url.contains("openai.com") ->
-                "$url/chat/completions"
-            // DeepSeek（DeepSeek-VL2）
-            url.contains("deepseek.com") ->
-                "$url/chat/completions"
-            // SiliconFlow（聚合视觉模型）
-            url.contains("siliconflow.cn") ->
-                "$url/chat/completions"
-            // Moonshot Kimi
-            url.contains("moonshot.cn") || url.contains("moonshot.ai") ->
-                "$url/chat/completions"
-            // 零一万物
-            url.contains("lingyiwanwu.com") ->
-                "$url/chat/completions"
-            // 腾讯混元
-            url.contains("hunyuan.tencent.com") ->
-                "$url/chat/completions"
-            // 通用：以 /v1、/v2、/v3 结尾 → 补全 /chat/completions
-            Regex("/v\\d+$").containsMatchIn(url) ->
-                "$url/chat/completions"
-            else -> url
-        }
-    }
+    /** 转发到 [Companion.normalizeBaseUrl]，保持既有调用点写法不变。 */
+    fun normalizeBaseUrl(raw: String): String = Companion.normalizeBaseUrl(raw)
 
 }
