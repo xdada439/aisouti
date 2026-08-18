@@ -17,8 +17,8 @@ android {
         applicationId = "com.aisouti"
         minSdk = 21
         targetSdk = 34
-        versionCode = 52
-        versionName = "1.1.50"
+        versionCode = 53
+        versionName = "1.1.51"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

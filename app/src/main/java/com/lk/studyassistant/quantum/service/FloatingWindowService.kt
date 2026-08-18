@@ -1636,7 +1636,10 @@ class FloatingWindowService : LifecycleService(), MyAccessibilityService.Overlay
             set(java.util.Calendar.MILLISECOND, 0)
         }
         val midnight = cal.timeInMillis
-        val tsRegex = Regex("""^\[(\d{2}):(\d{2}):(\d{2})\.(\d{3})] (\[(?:Pipeline|VisionApi|Extract|QuestionBank|OptionMatch|AnswerRemap)] .*)$""")
+        // 1.1.51 补 OcrLayout / OcrDump / Stats：
+        // 排查"某个 App 的版面为什么解析不了"必须看原始行结构，而 logcat 环形缓冲
+        // 几分钟就滚没了。不落进应用内记录的话，用户反馈时这条线索必然已经丢失。
+        val tsRegex = Regex("""^\[(\d{2}):(\d{2}):(\d{2})\.(\d{3})] (\[(?:Pipeline|VisionApi|Extract|QuestionBank|OptionMatch|AnswerRemap|OcrLayout|OcrDump|Stats)] .*)$""")
         val lines = mutableListOf<String>()
         for (line in AppLogger.getLogs()) {
             val m = tsRegex.matchEntire(line) ?: continue
@@ -1664,7 +1667,10 @@ class FloatingWindowService : LifecycleService(), MyAccessibilityService.Overlay
                 payload.contains("matched=true") ||
                 payload.contains("raw_answer=") && payload.contains("final=") ||
                 payload.startsWith("[OptionMatch]") ||
-                payload.startsWith("[AnswerRemap]")
+                payload.startsWith("[AnswerRemap]") ||
+                payload.startsWith("[OcrLayout]") ||
+                payload.startsWith("[OcrDump]") ||
+                payload.startsWith("[Stats]")
             ) {
                 lines.add(payload)
             }
