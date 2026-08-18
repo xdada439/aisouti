@@ -185,6 +185,68 @@ class ApiRepository(private val configStore: ApiConfigStore) {
         }
     }
 
+    /**
+     * 读图能力实测（1.1.48）。
+     *
+     * [testConnection] 只发纯文本，所以它通过**只能说明地址通、Key 有效、模型名存在**，
+     * 完全没验证这个模型能不能吃图片——填一个纯文本模型（如 qwen-plus）测试照样通过，
+     * 等到真正搜题时才发现读不了图。
+     *
+     * 这里生成一张 96×96 的图，白底黑字写一个数字，问模型图里是什么数字：
+     *  · 请求成功 → 至少证明该模型接受 image_url 输入
+     *  · 回答里出现那个数字 → 进一步证明它是真看懂了，而不是在瞎猜
+     */
+    fun testVisionCapability(timeoutSec: Long = 30L): Result<String> {
+        val config = configStore.get()
+        if (config.visionModel.isBlank()) {
+            return Result.failure(IllegalStateException("未填写视觉模型"))
+        }
+        val digit = "7"
+        val bmp = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888)
+        android.graphics.Canvas(bmp).apply {
+            drawColor(android.graphics.Color.WHITE)
+            val paint = android.graphics.Paint().apply {
+                color = android.graphics.Color.BLACK
+                textSize = 72f
+                isAntiAlias = true
+                textAlign = android.graphics.Paint.Align.CENTER
+            }
+            drawText(digit, 48f, 72f, paint)
+        }
+        AppLogger.log("[ApiVisionTest] request_start model=${config.visionModel}")
+
+        return runCatching {
+            val contentArray = JSONArray()
+                .put(JSONObject().apply {
+                    put("type", "text")
+                    put("text", "图片里是一个阿拉伯数字，只回答这个数字本身，不要任何其它文字。")
+                })
+                .put(JSONObject().apply {
+                    put("type", "image_url")
+                    put("image_url", JSONObject().apply { put("url", bitmapToDataUrl(bmp)) })
+                })
+            val payload = JSONObject().apply {
+                put("model", config.visionModel)
+                put("messages", JSONArray().put(JSONObject().apply {
+                    put("role", "user")
+                    put("content", contentArray)
+                }))
+                put("temperature", 0)
+                put("max_tokens", 20)
+            }
+            val raw = execute(config.baseUrl, config.apiKey, payload, buildClient(timeoutSec)).trim()
+            val recognized = raw.contains(digit)
+            AppLogger.log("[ApiVisionTest] success recognized=$recognized reply=${raw.take(40)}")
+            if (recognized) {
+                "读图正常（模型正确识别出图中的数字）"
+            } else {
+                "该模型接受图片输入，但没认出图中的数字（回答：${raw.take(30)}）。可能识别能力偏弱，建议换更强的视觉模型。"
+            }
+        }.onFailure { e ->
+            AppLogger.log("[ApiVisionTest] failed reason=${e.message?.replace("\n", " | ")?.take(160)}")
+        }.also { runCatching { bmp.recycle() } }
+    }
+
     private fun execute(url: String, apiKey: String, payload: JSONObject, client: OkHttpClient): String {
         val request = Request.Builder()
             .url(url.trim())
@@ -195,7 +257,20 @@ class ApiRepository(private val configStore: ApiConfigStore) {
 
         client.newCall(request).execute().use { resp ->
             val body = resp.body?.string().orEmpty()
-            if (!resp.isSuccessful) throw IllegalStateException("HTTP ${resp.code}: ${body.take(300)}")
+            if (!resp.isSuccessful) {
+                // 把请求地址和常见状态码的含义带进错误信息。
+                // 原来只有 "HTTP 404:"（很多网关 404 连 body 都没有），用户完全无从下手。
+                val advice = when (resp.code) {
+                    401, 403 -> "API Key 无效或没有该模型的权限"
+                    404 -> "地址或模型不存在。检查 Base URL 路径（多数服务商是 /v1/chat/completions），以及模型名是否属于该服务商"
+                    429 -> "触发限流或余额不足"
+                    in 500..599 -> "服务商侧异常，稍后重试"
+                    else -> "请求被拒绝"
+                }
+                throw IllegalStateException(
+                    "HTTP ${resp.code}（$advice）\n请求地址: ${url.trim()}\n返回: ${body.take(200).ifBlank { "(空)" }}"
+                )
+            }
             if (body.isBlank()) throw IllegalStateException("API返回为空")
             return parseAssistantContent(body)
         }

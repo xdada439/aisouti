@@ -97,6 +97,11 @@ class FloatingWindowService : LifecycleService(), MyAccessibilityService.Overlay
         // 资料/教材检索最低相关度。低于此值不投喂 LLM 判答，直接降级到模型自身知识兜底。
         private const val MATERIAL_MATCH_THRESHOLD = 0.45
 
+        /** 识别层来源标记，用于降级率统计 */
+        private const val SRC_OCR = "OCR"
+        private const val SRC_VISION = "VISION"
+        private const val SRC_A11Y = "A11Y"
+
         /** 兜底答案的免责提示：来源分「视觉模型」/「语言模型」两种。 */
         private const val FALLBACK_SOURCE_VISION = "视觉模型"
         private const val FALLBACK_SOURCE_TEXT = "语言模型"
@@ -172,6 +177,12 @@ class FloatingWindowService : LifecycleService(), MyAccessibilityService.Overlay
          * 题库命中和资料命中都不设此字段。
          */
         val fallbackSource: String = "",
+        /**
+         * 产出这条结果的**识别层**来源：OCR / VISION / A11Y（空 = 没走到任何识别源）。
+         * 用于统计降级率——换一个刷题 App 时，OCR 命中率会立刻反映在日志里，
+         * 不用靠"感觉这个 App 不太行"或者等用户抱怨。
+         */
+        val recognitionSource: String = "",
         val finalAnswer: String = "",
         val errorCode: String = "",
         val timestamp: Long = System.currentTimeMillis(),
@@ -494,6 +505,7 @@ class FloatingWindowService : LifecycleService(), MyAccessibilityService.Overlay
             }
 
             latestTestDetail = detail
+            recordPipelineStats(detail)
             commitRecognitionRecord(detail, extractQuestionPreviewFromDetail(detail))
 
             // 1.1.13: 没找到完整题 → 渲染灰色提示，不显示答案
@@ -524,6 +536,39 @@ class FloatingWindowService : LifecycleService(), MyAccessibilityService.Overlay
         }
     }
 
+    // ── 降级率统计（1.1.50）───────────────────────────
+    // 换一个刷题 App，版面一变 OCR 命中率就会掉。以前只能靠"感觉这个 App 不太行"，
+    // 现在每次搜题结束打一行会话累计，降级率一跳立刻看得见，也是判断
+    // "要不要为某类版面做适配"的依据。
+    private var statOcrHit = 0
+    private var statVisionHit = 0
+    private var statA11yHit = 0
+    private var statNoAnswer = 0
+
+    /** 每次搜题结束时调用，累计并打印会话级命中分布。 */
+    private fun recordPipelineStats(detail: TestDetail) {
+        val meaningful = isMeaningfulAnswerText(detail.finalAnswer)
+        when {
+            !meaningful -> statNoAnswer++
+            detail.recognitionSource == SRC_OCR -> statOcrHit++
+            detail.recognitionSource == SRC_VISION -> statVisionHit++
+            detail.recognitionSource == SRC_A11Y -> statA11yHit++
+            else -> statNoAnswer++
+        }
+        val total = statOcrHit + statVisionHit + statA11yHit + statNoAnswer
+        if (total == 0) return
+        val pct = { n: Int -> "%.0f%%".format(n * 100.0 / total) }
+        AppLogger.log(
+            "[Stats] total=$total " +
+                "ocr=$statOcrHit(${pct(statOcrHit)}) " +
+                "vision=$statVisionHit(${pct(statVisionHit)}) " +
+                "a11y=$statA11yHit(${pct(statA11yHit)}) " +
+                "no_answer=$statNoAnswer(${pct(statNoAnswer)}) " +
+                "| 本次 src=${detail.recognitionSource.ifBlank { "-" }} " +
+                "answer=${detail.finalAnswer.take(12).ifBlank { "-" }}"
+        )
+    }
+
     /** 答案来源标签：精准题库 / 模糊匹配 / 兜底模式。 */
     private fun sourceLabelOf(detail: TestDetail): String = when {
         detail.preciseHit -> "精准题库"
@@ -552,6 +597,7 @@ class FloatingWindowService : LifecycleService(), MyAccessibilityService.Overlay
             val detail = executeAccessibilityTextPipeline(captureError = reason, screenshotFailed = true)
             if (!isActiveCapture(captureToken)) return
             latestTestDetail = detail
+            recordPipelineStats(detail)
             DebugTraceStore(this@FloatingWindowService).save(detail.toDisplayText(), null)
             commitRecognitionRecord(detail, extractQuestionPreviewFromDetail(detail))
 
@@ -864,13 +910,15 @@ class FloatingWindowService : LifecycleService(), MyAccessibilityService.Overlay
             return@withContext detail.copy(
                 apiJson = rawJson.take(1000),
                 errorCode = ERROR_CODE_NO_COMPLETE_QUESTION,
+                recognitionSource = SRC_VISION,
                 finalAnswer = ""
             )
         }
 
         val currentDetail = detail.copy(
             apiJson = rawJson.take(1000),
-            answerOptions = pickedResult.toAnswerOptionsMap()
+            answerOptions = pickedResult.toAnswerOptionsMap(),
+            recognitionSource = SRC_VISION
         )
 
         // Vision 结构化结果走题库 + 模糊 + 文本兜底
@@ -901,13 +949,21 @@ class FloatingWindowService : LifecycleService(), MyAccessibilityService.Overlay
         val ocrText = ocrResult.fullText.trim()
         if (ocrResult.success && ocrText.isNotBlank() && ocrText.length >= MIN_OCR_TEXT_LENGTH) {
             AppLogger.log("[Source] success=MLKIT_OCR length=${ocrText.length}")
+            // 先把 ML Kit 的切分还原成"屏幕上真正的行"，再做白名单。
+            // 这一步是跨 App 稳定性的地基，见 OcrLayout 的注释。
+            val visualLines = normalizeOcrLines(ocrResult.sortedLines)
+            AppLogger.log("[OcrLayout] mlkit_lines=${ocrResult.sortedLines.size} visual_lines=${visualLines.size}")
             // OCR 白名单：从选项出发只圈"小题干+选项"（单题/多题统一），顶部/底部 UI、公共材料一律不取
-            val whitelisted = buildOcrQuestionText(ocrResult.sortedLines, lastBallCenterY)
-            val parseText = whitelisted.ifBlank { ocrText }
+            val whitelisted = buildOcrQuestionText(visualLines, lastBallCenterY)
+            // 回退也用重建后的行：全文兜底同样受益于"标签+内容"已经并回同一行
+            val parseText = whitelisted.ifBlank { visualLines.joinToString("\n") { it.text }.ifBlank { ocrText } }
             if (whitelisted.isNotBlank()) {
-                AppLogger.log("[Source] OCR_WHITELIST len=${whitelisted.length} ballY=$lastBallCenterY text=${whitelisted.replace("\n", " ").take(80)}")
+                AppLogger.log("[Source] OCR_WHITELIST len=${whitelisted.length} ballY=$lastBallCenterY text=${whitelisted.replace("\n", " ").take(200)}")
             } else {
-                AppLogger.log("[Source] OCR_WHITELIST fallback=fulltext reason=options_lt_2")
+                // 白名单没圈出东西 = 找不到 ≥2 个"行首是 A/B/C…"的行。
+                // 这时原始行结构是唯一线索，必须留下来。
+                AppLogger.log("[Source] OCR_WHITELIST fallback=fulltext reason=option_anchor_lt_2")
+                dumpOcrLines(visualLines, "whitelist_empty")
             }
             val parsedQuestion = LocalQuestionParser.parse(parseText)
             if (isOcrQuestionUsable(parsedQuestion)) {
@@ -915,7 +971,8 @@ class FloatingWindowService : LifecycleService(), MyAccessibilityService.Overlay
                 return@withContext answerQuestionFromResult(
                     questionResult = parsedQuestion,
                     currentDetail = detail.copy(
-                        apiJson = "OCR文本:\n${parseText.take(1200)}"
+                        apiJson = "OCR文本:\n${parseText.take(1200)}",
+                        recognitionSource = SRC_OCR
                     ),
                     preciseCandidatesPrefix = listOf(
                         "ocr source=${ScreenOcrEngine.ENGINE_NAME}",
@@ -924,6 +981,10 @@ class FloatingWindowService : LifecycleService(), MyAccessibilityService.Overlay
                 )
             }
             AppLogger.log("[Source] failed=MLKIT_OCR reason=parse_insufficient missing=${parsedQuestion.missingFields.joinToString(",")}")
+            // OCR 解析失败是唯一需要看原始文本的时刻，而这里恰恰以前什么都没留：
+            // 降级到 Vision 后 detail.apiJson 会被 Vision 的 JSON 覆盖，OCR 文本永久丢失。
+            // 必须**按行**打印——判断"选项是不是挤在同一行"只能靠行结构，拼成一段就看不出来了。
+            dumpOcrLines(visualLines, "parse_insufficient")
             AppLogger.log("[Source] skip=ACCESSIBILITY_NODE_TEXT reason=vision_before_accessibility")
             return@withContext detail.copy(
                 apiJson = "OCR文本:\n${parseText.take(1200)}",
@@ -944,6 +1005,53 @@ class FloatingWindowService : LifecycleService(), MyAccessibilityService.Overlay
             errorCode = ocrErrorCode,
             finalAnswer = ""
         )
+    }
+
+    /**
+     * 视觉行重建的适配层（1.1.50）。
+     *
+     * 真正的算法在 [com.lk.studyassistant.quantum.util.OcrLayout] —— 那是纯 Kotlin、
+     * 不依赖 Android 坐标类，因此可以用真机抓到的行结构写回归单测。这里只负责
+     * OcrLine <-> OcrLayout.Box 的互转。
+     */
+    private fun normalizeOcrLines(
+        lines: List<com.lk.studyassistant.quantum.util.OcrLine>
+    ): List<com.lk.studyassistant.quantum.util.OcrLine> {
+        if (lines.size < 2) return lines
+        val boxes = lines.map {
+            com.lk.studyassistant.quantum.util.OcrLayout.Box(
+                it.text, it.bounds.left, it.bounds.top, it.bounds.right, it.bounds.bottom
+            )
+        }
+        val minConf = lines.minOf { it.confidence }
+        return com.lk.studyassistant.quantum.util.OcrLayout.normalize(boxes).map { b ->
+            com.lk.studyassistant.quantum.util.OcrLine(
+                text = b.text,
+                bounds = android.graphics.Rect(b.left, b.top, b.right, b.bottom),
+                confidence = minConf
+            )
+        }
+    }
+
+    /**
+     * 把 OCR 的原始行结构打进日志（1.1.49）。
+     *
+     * 只在 OCR 解析失败时调用——那是唯一需要它、而且以前完全拿不到的场景。
+     * 每行单独一条，带 y 区间和是否被判定为选项锚点，用来回答一个很具体的问题：
+     * **选项到底是一行一个，还是几个挤在同一行？** 现有的选项正则全是 `^` 行首锚定，
+     * 一行多选项会导致后面的 B/C/D 直接丢失，而这在拼接后的全文里完全看不出来。
+     */
+    private fun dumpOcrLines(lines: List<com.lk.studyassistant.quantum.util.OcrLine>, reason: String) {
+        val anchor = Regex("""^\s*[（(]?([A-Ha-h])[)）.、:：]?\s*\S""")
+        AppLogger.log("[OcrDump] reason=$reason lines=${lines.size}")
+        lines.take(40).forEachIndexed { i, ln ->
+            val t = ln.text.replace("\n", " ")
+            val isAnchor = anchor.containsMatchIn(t.trim())
+            AppLogger.log(
+                "[OcrDump] L$i y=${ln.bounds.top}-${ln.bounds.bottom} anchor=${if (isAnchor) "Y" else "n"} | $t"
+            )
+        }
+        if (lines.size > 40) AppLogger.log("[OcrDump] ...(还有 ${lines.size - 40} 行未打印)")
     }
 
     /**
@@ -1040,7 +1148,7 @@ class FloatingWindowService : LifecycleService(), MyAccessibilityService.Overlay
         // 无障碍是最后一条链路：题库不中时允许继续降级到 资料 RAG → 语言模型自身知识
         answerQuestionFromResult(
             questionResult = questionResult,
-            currentDetail = baseDetail.copy(apiJson = standardText),
+            currentDetail = baseDetail.copy(apiJson = standardText, recognitionSource = SRC_A11Y),
             preciseCandidatesPrefix = listOf(
                 "accessibility score=${"%.2f".format(accessibilityBlockScore(bestBlock, sh, ballY))}",
                 bestBlock.rawText.take(240)

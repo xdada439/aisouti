@@ -176,15 +176,36 @@ class AISettingsActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             val result = withContext(Dispatchers.IO) { repo.testConnection() }
-            setBusy(false)
             result.fold(
                 onSuccess = {
-                    showStatus("连接成功！API 可用")
                     AppLogger.log("[ApiConfig] test_success")
+                    // 纯文本通了 ≠ 能读图。填了视觉模型就再实测一次读图，
+                    // 否则用户会以为"测试通过"就万事大吉，等真搜题才发现模型吃不了图片。
+                    if (visionModel.isBlank()) {
+                        setBusy(false)
+                        showStatus("连接成功！（未填视觉模型，仅文本能力可用，不走截图识别）")
+                        return@fold
+                    }
+                    showStatus("文本连接成功，正在实测读图能力...")
+                    lifecycleScope.launch {
+                        val vision = withContext(Dispatchers.IO) { repo.testVisionCapability() }
+                        setBusy(false)
+                        vision.fold(
+                            onSuccess = { msg -> showStatus("连接成功！\n$msg") },
+                            onFailure = { e ->
+                                showStatus(
+                                    "文本连接成功，但读图失败：\n${e.message.orEmpty().take(300)}\n\n" +
+                                        "「$visionModel」可能不是视觉模型。通义千问要用 qwen-vl-* 系列。"
+                                )
+                            }
+                        )
+                    }
                 },
                 onFailure = { e ->
-                    showStatus("连接失败：${e.message?.take(120)}")
-                    AppLogger.log("[ApiConfig] test_failed reason=${e.message?.take(100)}")
+                    setBusy(false)
+                    // 不截断到 120 字：错误里现在带了请求地址和排查建议，截断等于把有用的部分砍掉
+                    showStatus("连接失败：\n${e.message.orEmpty().take(400)}")
+                    AppLogger.log("[ApiConfig] test_failed reason=${e.message?.replace("\n", " | ")?.take(240)}")
                 }
             )
         }
